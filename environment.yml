@@ -1,0 +1,24 @@
+name: crash-analysis
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9*
+  - pyproj<3
+  - geopandas<0.9
+  - psycopg2
+  - geoalchemy2
+  - matplotlib
+  - openpyxl
+  - sqlalchemy
+  - sqlalchemy-utils
+  - tabula-py
+  - PyPDF2
+  - black
+  - flake8
+  - jupyterlab
+  - cx_oracle
+  - numpy
+  - pip
+  - python-dotenv
+  - pip:
+      - --editable .
