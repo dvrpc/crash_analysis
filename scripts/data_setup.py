@@ -3,13 +3,34 @@ data_setup.py
 ------------------
 This script pulls the latest crash datatable from the GIS database.
 It then clips that data to a 100 ft buffer around a linear study area.
+Assumes starting SRID of study area linework as 2272 (or something based in feet).
 The result of this function is a geodataframe containing crashes within the study area.
+
+TO UPDATE for differnt study areas: 
+    -Crash Data Query
+    -sa_shape
+    -sa_name
 """
 
 import geopandas as gpd
 from sqlalchemy_utils import database_exists, create_database
 import env_vars as ev
 from env_vars import GIS_ENGINE, ENGINE
+
+#Crash Data Query
+###this query should be broad and include everything needed to generate charts
+###joins to other tables should happen before or within this querey
+Q_crash_data = """select 
+                crash_year, 
+                county, 
+                fatal_count , 
+                maj_inj_count, 
+                shape
+            from transportation.crash_pennsylvania cp 
+            where district = '06'
+            and crash_year = '2019'
+            and county = '67'
+            and shape is not null;"""
 
 
 def main():
@@ -35,19 +56,7 @@ def main():
 
     #read crash data from gis database
     crash_data = gpd.GeoDataFrame.from_postgis(
-        #this query should be broad and include everything needed to generate charts
-        #joins to other tables should happen before or within this querey
-        fr"""select 
-                crash_year, 
-                county, 
-                fatal_count , 
-                maj_inj_count, 
-                shape
-            from transportation.crash_pennsylvania cp 
-            where district = '06'
-            and crash_year = '2019'
-            and county = '67'
-            and shape is not null;""", 
+        Q_crash_data, 
         con = GIS_ENGINE,
         geom_col = "shape",
     )
