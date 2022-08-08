@@ -8,8 +8,6 @@ The result of this function is a geodataframe containing crashes within the stud
 
 import geopandas as gpd
 from sqlalchemy_utils import database_exists, create_database
-from sqlalchemy import create_engine
-from shapely import geometry, ops
 import env_vars as ev
 from env_vars import GIS_ENGINE, ENGINE
 
@@ -29,8 +27,9 @@ def main():
     study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
  
     #create 100ft buffer around study area and save as new table
+
     ENGINE.execute("""
-        CREATE TABLE sa_buffer AS(
+        CREATE TABLE IF NOT EXISTS sa_buffer AS(
         select st_transform(st_buffer(st_linemerge(st_union(geometry)),100), 4326) as buff
         from study_area sa);""")
 
