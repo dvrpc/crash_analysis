@@ -6,7 +6,7 @@ It then clips that data to a 100 ft buffer around a linear study area.
 Assumes starting SRID of study area linework as 2272 (or something based in feet).
 The result of this function is a geodataframe containing crashes within the study area.
 
-TO UPDATE for differnt study areas: 
+TO UPDATE for different purposes/study areas: 
     -Crash Data Query
     -sa_shape
     -sa_name
