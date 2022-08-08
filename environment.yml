@@ -11,11 +11,13 @@ dependencies:
   - openpyxl
   - sqlalchemy
   - sqlalchemy-utils
+  - shapely
   - black
   - flake8
   - jupyterlab
   - numpy
   - pip
   - python-dotenv
+  - seaborn
   - pip:
       - --editable .
