@@ -6,13 +6,15 @@ Automating standard crash analysis for Vision Zero and other corridor safety pro
 
 To create the python environment, run the next line in a conda prompt from the project directory:
 
-'''conda env create -f environment.yml'''
+`conda env create -f environment.yml`
+
 To activate the new environment, run the following line:
 
-'''conda activate crash-analysis'''
+`conda activate crash-analysis`
+
 To update the environment as changes are needed, run the following line:
 
-'''conda env update -f environment.yml'''
+`conda env update -f environment.yml`
 
 ### Running Scripts
 
