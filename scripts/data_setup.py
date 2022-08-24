@@ -36,7 +36,7 @@ Q_crash_data = """select
 def main():
 
     sa_shape = "Hunting_Park_Study_Area_"
-    sa_name = "Hunting_Park"
+    sa_name = "hunting_park"
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
