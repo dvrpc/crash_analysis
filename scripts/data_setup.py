@@ -25,6 +25,11 @@ Q_crash_data = """select
                 county, 
                 fatal_count , 
                 maj_inj_count, 
+                bicycle_count,
+                ped_count,
+                ped_death_count,
+                bicycle_death_count,
+                collision_type,
                 shape
             from transportation.crash_pennsylvania cp 
             where district = '06'
