@@ -25,6 +25,11 @@ Q_crash_data = """select
                 county, 
                 fatal_count , 
                 maj_inj_count, 
+                bicycle_count,
+                ped_count,
+                ped_death_count,
+                bicycle_death_count,
+                collision_type,
                 shape
             from transportation.crash_pennsylvania cp 
             where district = '06'
@@ -33,10 +38,10 @@ Q_crash_data = """select
             and shape is not null;"""
 
 
-def main():
+def clip_crashes():
 
     sa_shape = "Hunting_Park_Study_Area_"
-    sa_name = "Hunting_Park"
+    sa_name = "hunting_park"
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
@@ -81,4 +86,4 @@ def main():
     return sa_crashes
 
 if __name__ == "__main__":
-    main()
+    clip_crashes()
