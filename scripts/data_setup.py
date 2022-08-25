@@ -33,7 +33,7 @@ Q_crash_data = """select
             and shape is not null;"""
 
 
-def main():
+def clip_crashes():
 
     sa_shape = "Hunting_Park_Study_Area_"
     sa_name = "hunting_park"
@@ -81,4 +81,4 @@ def main():
     return sa_crashes
 
 if __name__ == "__main__":
-    main()
+    clip_crashes()
