@@ -30,10 +30,13 @@ Q_crash_data = """select
                 ped_death_count,
                 bicycle_death_count,
                 collision_type,
+                max_severity_level,
+                hour_of_day,
+                illumination,
+                road_condition,
                 shape
             from transportation.crash_pennsylvania cp 
             where district = '06'
-            and crash_year = '2019'
             and county = '67'
             and shape is not null;"""
 

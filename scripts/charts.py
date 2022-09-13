@@ -19,6 +19,7 @@ bicycle_count=df["bicycle_count"].sum()
 total_minus_fatal_and_inj = (total_crashes-injury_count-fatality_count)
 total_minus_bike_ped_count = (total_crashes-ped_count-bicycle_count)
 
+
 def injury_pie_chart(df):
     """
     Creates a pie chart for injuries and fatalities versus total crashes in the study area
