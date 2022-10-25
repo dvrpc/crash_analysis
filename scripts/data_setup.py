@@ -13,6 +13,7 @@ TO UPDATE for different purposes/study areas:
 """
 
 import geopandas as gpd
+import pandas as pd
 from sqlalchemy_utils import database_exists, create_database
 import env_vars as ev
 from env_vars import GIS_ENGINE, ENGINE
@@ -21,6 +22,7 @@ from env_vars import GIS_ENGINE, ENGINE
 ###this query should be broad and include everything needed to generate charts
 ###joins to other tables should happen before or within this querey
 Q_crash_data = """select 
+                crn,
                 crash_year, 
                 county, 
                 fatal_count , 
@@ -39,6 +41,12 @@ Q_crash_data = """select
             where district = '06'
             and county = '67'
             and shape is not null;"""
+
+
+Q_person_data = """select *
+            from transportation.crash_pa_person cp;"""
+Q_vehicle_data = """select *
+            from transportation.crash_pa_vehicle cp;"""
 
 
 def clip_crashes():
@@ -85,6 +93,20 @@ def clip_crashes():
     #write dataframe to postgres database
     sa_crashes.to_postgis(fr"{sa_name}_crashes", con=ENGINE, if_exists="replace")
     print("To postgis: Complete")
+
+    #read and write person data to be joined later
+    person_data = pd.read_sql(
+        Q_person_data,
+        con = GIS_ENGINE
+    )
+    person_data.to_sql('person_data', ENGINE, if_exists="replace")
+
+    #read and write vehicle data to be joined later
+    vehicle_data = pd.read_sql(
+        Q_vehicle_data,
+        con = GIS_ENGINE
+    )
+    vehicle_data.to_sql('vehicle_data', ENGINE, if_exists="replace")
 
     return sa_crashes
 
