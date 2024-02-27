@@ -44,15 +44,45 @@ Q_crash_data = """select
 
 
 Q_person_data = """select *
-            from transportation.crash_pa_person cp;"""
+            from transportation.crash_pa_person p
+            where p.crn in (
+                select crn from transportation.crash_pennsylvania cp
+                where county = '67'
+            );"""
 Q_vehicle_data = """select *
-            from transportation.crash_pa_vehicle cp;"""
-
+            from transportation.crash_pa_vehicle v
+            where v.crn in (
+                select crn from transportation.crash_pennsylvania cp
+                where county = '67'
+            );"""
+Q_flag_data = """select *
+            from transportation.crash_pa_flag f
+            where f.crn in (
+                select crn from transportation.crash_pennsylvania cp
+                where county = '67'
+            );"""
+Q_road_data = """select *
+            from transportation.crash_pa_roadway r
+            where r.crn in (
+                select crn from transportation.crash_pennsylvania cp
+                where county = '67'
+            );"""
+Q_PennDOT_roads = """select *
+            from transportation.padot_rms pr
+            where cty_code = '67'
+            ;"""
+Q_local_roads = """select *
+            from transportation.padot_localroads pl
+            where cty_code = '67'
+            ;"""
+# Q_get_phila = """select cb.*
+#             from boundaries.countyboundaries cb
+#             where co_name = 'Philadelphia';"""
 
 def clip_crashes():
 
-    sa_shape = "Hunting_Park_Study_Area_"
-    sa_name = "hunting_park"
+    # sa_shape = "Hunting_Park_Study_Area_"
+    sa_name = "phila"
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
@@ -60,15 +90,22 @@ def clip_crashes():
     ENGINE.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
 
     #read study area shapefile and write to postgres
-    study_area = gpd.read_file(fr"{ev.DATA_ROOT}/{sa_shape}.shp")
-    study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
+
+    # study_area = gpd.GeoDataFrame.from_postgis(
+    #     Q_get_phila,
+    #     con = GIS_ENGINE,
+    #     geom_col= "shape",
+    # )
+    # study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
+
+    # study_area = gpd.read_file(fr"{ev.DATA_ROOT}/{sa_shape}.shp")
+    # study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
  
     #create 100ft buffer around study area and save as new table
-
-    ENGINE.execute("""
-        CREATE TABLE IF NOT EXISTS sa_buffer AS(
-        select st_transform(st_buffer(st_linemerge(st_union(geometry)),100), 4326) as buff
-        from study_area sa);""")
+    # ENGINE.execute("""
+    #     CREATE TABLE IF NOT EXISTS sa_buffer AS(
+    #     select st_transform(st_buffer(st_linemerge(st_union(geometry)),100), 4326) as buff
+    #     from study_area sa);""")
 
     #read crash data from gis database
     crash_data = gpd.GeoDataFrame.from_postgis(
@@ -79,20 +116,20 @@ def clip_crashes():
     #write to postgis
     crash_data.to_postgis('crash_data', con=ENGINE, if_exists="replace")
 
-    sa_crashes = gpd.GeoDataFrame.from_postgis(
-        """SELECT cd.*
-        FROM crash_data cd JOIN sa_buffer sa ON ST_Intersects(cd.shape, sa.buff) """,
-        con = ENGINE,
-        geom_col= "shape"
-    )
+    # sa_crashes = gpd.GeoDataFrame.from_postgis(
+    #     """SELECT cd.*
+    #     FROM crash_data cd JOIN study_area sa ON ST_Intersects(cd.shape, sa.shape) """,
+    #     con = ENGINE,
+    #     geom_col= "shape"
+    # )
 
     #export clipped crash data to shapefile
-    sa_crashes.to_file(fr"{ev.DATA_ROOT}/{sa_name}_crashes.shp")
-    print("To shapefile: Complete")
+    # sa_crashes.to_file(fr"{ev.DATA_ROOT}/{sa_name}_crashes.shp")
+    # print("To shapefile: Complete")
 
     #write dataframe to postgres database
-    sa_crashes.to_postgis(fr"{sa_name}_crashes", con=ENGINE, if_exists="replace")
-    print("To postgis: Complete")
+    # sa_crashes.to_postgis(fr"{sa_name}_crashes", con=ENGINE, if_exists="replace")
+    
 
     #read and write person data to be joined later
     person_data = pd.read_sql(
@@ -108,7 +145,38 @@ def clip_crashes():
     )
     vehicle_data.to_sql('vehicle_data', ENGINE, if_exists="replace")
 
-    return sa_crashes
+    #read and write flag data to be joined later
+    flag_data = pd.read_sql(
+        Q_flag_data,
+        con = GIS_ENGINE
+    )
+    flag_data.to_sql('flag_data', ENGINE, if_exists="replace")
+
+    #read and write roadway data to be joined later
+    roadway_data = pd.read_sql(
+        Q_road_data,
+        con = GIS_ENGINE
+    )
+    roadway_data.to_sql('roadway_data', ENGINE, if_exists="replace")
+
+    print("All data to postgis: Complete")
+
+    #read and write penndot roads data to be joined later
+    padot_roads = pd.read_sql(
+        Q_PennDOT_roads,
+        con = GIS_ENGINE
+    )
+    padot_roads.to_sql('penndot_roads', ENGINE, if_exists="replace")
+
+    #read and write penndot roads data to be joined later
+    local_roads = pd.read_sql(
+        Q_local_roads,
+        con = GIS_ENGINE
+    )
+    local_roads.to_sql('local_roads', ENGINE, if_exists="replace")
+
+
+    #return sa_crashes
 
 if __name__ == "__main__":
     clip_crashes()
