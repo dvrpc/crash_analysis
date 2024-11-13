@@ -1,4 +1,4 @@
-sa_name = "hunting_park"
+sa_name = "Hamorton"
 
 #Non-PDO Crashes by year 
 q_nonpdo_by_year = fr""" 
@@ -67,7 +67,7 @@ select count (crash_table), crash_table.road_condition
 #KSI Crashes by Weather Conditions  
 q_ksi_by_condition = fr"""
 select count (crash_table), crash_table.road_condition 
-	from crash_penn{sa_name}_crashessylvania as crash_table 
+	from {sa_name}_crashes as crash_table 
 	where (crash_table.max_severity_level = '1' or crash_table.max_severity_level = '2')
 	group by crash_table.road_condition"""
 

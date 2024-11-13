@@ -72,23 +72,23 @@ q_sr_by_seg_fcjoin = """
         on cd.crn  = fd.crn
         ),
     tblB as(
-        select route, segment, count(*) as num_sr, dvrpcfc
+        select route, segment, count(*) as num_sr, dvrpcfc, speed_limit
         from tblA a
         where speeding_related = 1
         and road_owner = 2
         and crash_year = 2022
-        group by route, segment, dvrpcfc
+        group by route, segment, dvrpcfc, speed_limit
         ),
     tblC as(
-        select route, segment, count(*) as num_not_sr, dvrpcfc
+        select route, segment, count(*) as num_not_sr, dvrpcfc, speed_limit
         from tblA a
         where speeding_related = 0
         and road_owner = 2
         and crash_year = 2022
-        group by route, segment, dvrpcfc
+        group by route, segment, dvrpcfc, speed_limit
     ),
     tblD as(
-        select b.route, b.segment, b.num_sr, c.num_not_sr, b.dvrpcfc
+        select b.route, b.segment, b.num_sr, c.num_not_sr, b.dvrpcfc, b.speed_limit
         from tblb b
         inner join tblC c
         on b.route = c.route
