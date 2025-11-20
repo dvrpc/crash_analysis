@@ -22,37 +22,36 @@ from env_vars import GIS_ENGINE, ENGINE
 ###this query should be broad and include everything needed to generate charts
 ###joins to other tables should happen before or within this querey
 Q_crash_data = """select 
-                crn,
+                cp.crn,
                 crash_year, 
                 county, 
                 fatal_count , 
-                maj_inj_count, 
-                bicycle_count,
+                susp_serious_inj_count, 
+                susp_minor_inj_count,
                 ped_count,
+                ped_susp_serious_inj_count,
                 ped_death_count,
+                bicycle_count,
+                bicycle_susp_serious_inj_count,
                 bicycle_death_count,
                 collision_type,
                 max_severity_level,
                 hour_of_day,
                 illumination,
                 road_condition,
+                heavy_truck_count, 
+                small_truck_count,
                 shape
             from transportation.crash_pennsylvania cp 
             where district = '06'
-            and county = '67'
+            and county = '15'
             and shape is not null;"""
-
-
-Q_person_data = """select *
-            from transportation.crash_pa_person cp;"""
-Q_vehicle_data = """select *
-            from transportation.crash_pa_vehicle cp;"""
 
 
 def clip_crashes():
 
-    sa_shape = "Hunting_Park_Study_Area_"
-    sa_name = "hunting_park"
+    sa_shape = "lincoln-hwy-sa"
+    sa_name = "lincoln-hwy"
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
@@ -93,20 +92,6 @@ def clip_crashes():
     #write dataframe to postgres database
     sa_crashes.to_postgis(fr"{sa_name}_crashes", con=ENGINE, if_exists="replace")
     print("To postgis: Complete")
-
-    #read and write person data to be joined later
-    person_data = pd.read_sql(
-        Q_person_data,
-        con = GIS_ENGINE
-    )
-    person_data.to_sql('person_data', ENGINE, if_exists="replace")
-
-    #read and write vehicle data to be joined later
-    vehicle_data = pd.read_sql(
-        Q_vehicle_data,
-        con = GIS_ENGINE
-    )
-    vehicle_data.to_sql('vehicle_data', ENGINE, if_exists="replace")
 
     return sa_crashes
 
