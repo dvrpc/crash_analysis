@@ -22,22 +22,29 @@ from env_vars import GIS_ENGINE, ENGINE
 ###this query should be broad and include everything needed to generate charts
 ###joins to other tables should happen before or within this querey
 Q_crash_data = """select 
-                crn,
+                cp.crn,
                 crash_year, 
                 county, 
                 fatal_count , 
-                maj_inj_count, 
-                bicycle_count,
+                susp_serious_inj_count, 
+                susp_minor_inj_count,
                 ped_count,
                 ped_death_count,
+                bicycle_count,
                 bicycle_death_count,
                 collision_type,
                 max_severity_level,
                 hour_of_day,
                 illumination,
                 road_condition,
+                heavy_truck_count, 
+                small_truck_count,
+                cpf.speeding,
+                cpf.speeding_related,
                 shape
             from transportation.crash_pennsylvania cp 
+            inner join transportation.crash_pa_flag cpf 
+            on cp.crn = cpf.crn
             where district = '06'
             and county = '15'
             and shape is not null;"""
@@ -82,7 +89,7 @@ Q_local_roads = """select *
 def clip_crashes():
 
     sa_shape = "Hamorton"
-    sa_name = "Hamorton"
+    sa_name = "hamorton"
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
@@ -118,7 +125,7 @@ def clip_crashes():
 
     sa_crashes = gpd.GeoDataFrame.from_postgis(
         """SELECT cd.*
-        FROM crash_data cd JOIN study_area sa ON ST_Intersects(cd.shape, sa.shape) """,
+        FROM crash_data cd JOIN study_area sa ON ST_Intersects(cd.shape, sa.geometry) """,
         con = ENGINE,
         geom_col= "shape"
     )
@@ -129,6 +136,7 @@ def clip_crashes():
 
     # write dataframe to postgres database
     sa_crashes.to_postgis(fr"{sa_name}_crashes", con=ENGINE, if_exists="replace")
+    print("To database: Complete")
     
 
     # #read and write person data to be joined later
@@ -176,7 +184,7 @@ def clip_crashes():
     # local_roads.to_sql('local_roads', ENGINE, if_exists="replace")
 
 
-    return sa_crashes
+    # return sa_crashes
 
 if __name__ == "__main__":
     clip_crashes()

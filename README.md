@@ -24,5 +24,5 @@ To run any of the scripts in this repo, activate the conda environment, change d
 conda activate crash-analysis
 d:
 cd dvrpc_shared/crash_analysis
-python /scripts/{script_name}.py
+python D:\dvrpc_shared\crash_analysis\scripts\{script_name}.py
 ```
