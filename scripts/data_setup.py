@@ -16,6 +16,7 @@ import geopandas as gpd
 import pandas as pd
 from sqlalchemy_utils import database_exists, create_database
 import env_vars as ev
+import csv
 from env_vars import GIS_ENGINE, ENGINE
 
 #Crash Data Query
@@ -44,30 +45,32 @@ Q_crash_data = """select
                 shape
             from transportation.crash_pennsylvania cp 
             where district = '06'
+            and crash_year in (2020, 2021, 2022, 2023, 2024)
             and county = '15'
             and shape is not null;"""
 
+def read_crn_from_csv ()
 
 def clip_crashes():
 
-    sa_shape = "lincoln-hwy-sa"
-    sa_name = "lincoln-hwy"
+    # sa_shape = "lincoln-hwy-sa"
+    # sa_name = "lincoln-hwy"
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
         create_database(ENGINE.url)
     ENGINE.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
 
-    #read study area shapefile and write to postgres
-    study_area = gpd.read_file(fr"{ev.DATA_ROOT}/{sa_shape}.shp")
-    study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
+    # #read study area shapefile and write to postgres
+    # study_area = gpd.read_file(fr"{ev.DATA_ROOT}/{sa_shape}.shp")
+    # study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
  
-    #create 100ft buffer around study area and save as new table
+    # #create 100ft buffer around study area and save as new table
 
-    ENGINE.execute("""
-        CREATE TABLE IF NOT EXISTS sa_buffer AS(
-        select st_transform(st_buffer(st_linemerge(st_union(geometry)),100), 4326) as buff
-        from study_area sa);""")
+    # ENGINE.execute("""
+    #     CREATE TABLE IF NOT EXISTS sa_buffer AS(
+    #     select st_transform(st_buffer(st_linemerge(st_union(geometry)),100), 4326) as buff
+    #     from study_area sa);""")
 
     #read crash data from gis database
     crash_data = gpd.GeoDataFrame.from_postgis(
