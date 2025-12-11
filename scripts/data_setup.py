@@ -2,14 +2,8 @@
 data_setup.py
 ------------------
 This script pulls the latest crash datatable from the GIS database.
-It then clips that data to a 100 ft buffer around a linear study area.
-Assumes starting SRID of study area linework as 2272 (or something based in feet).
-The result of this function is a geodataframe containing crashes within the study area.
-
-TO UPDATE for different purposes/study areas: 
-    -Crash Data Query
-    -sa_shape
-    -sa_name
+Data is pulled based on a pre-identified list of CRNs.
+The crash data subset necessary for tables and charts is then written to a local posgres DB for forther anlaysis.
 """
 
 import geopandas as gpd
@@ -18,11 +12,11 @@ from sqlalchemy_utils import database_exists, create_database
 import env_vars as ev
 import csv
 from env_vars import GIS_ENGINE, ENGINE
+from typing import List, Tuple
 
 #Crash Data Query
-###this query should be broad and include everything needed to generate charts
-###joins to other tables should happen before or within this querey
-Q_crash_data = """select 
+###this query should be broad and include everything needed to generate tables/charts
+query= """select 
                 cp.crn,
                 crash_year, 
                 county, 
@@ -44,59 +38,75 @@ Q_crash_data = """select
                 small_truck_count,
                 shape
             from transportation.crash_pennsylvania cp 
-            where district = '06'
-            and crash_year in (2020, 2021, 2022, 2023, 2024)
-            and county = '15'
-            and shape is not null;"""
+            where crn = ANY(%s);"""
 
-def read_crn_from_csv ()
+def read_crn_from_csv (filename: str, column_name: str = 'crn')-> List[int]:
+    crn_list = []
+    with open(filename, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            crn = row.get(column_name, '').strip()
+            if crn and crn.isdigit():
+                crn_list.append(int(crn))
+    return crn_list
 
-def clip_crashes():
-
-    # sa_shape = "lincoln-hwy-sa"
-    # sa_name = "lincoln-hwy"
+def query_database(crn_list: List[int]) -> List[Tuple]:
 
     #create database and enable postgis
     if not database_exists(ENGINE.url):
         create_database(ENGINE.url)
     ENGINE.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
 
-    # #read study area shapefile and write to postgres
-    # study_area = gpd.read_file(fr"{ev.DATA_ROOT}/{sa_shape}.shp")
-    # study_area.to_postgis('study_area', con=ENGINE, if_exists="replace")
- 
-    # #create 100ft buffer around study area and save as new table
-
-    # ENGINE.execute("""
-    #     CREATE TABLE IF NOT EXISTS sa_buffer AS(
-    #     select st_transform(st_buffer(st_linemerge(st_union(geometry)),100), 4326) as buff
-    #     from study_area sa);""")
+    #Crash Data Query
+    ###this query should be broad and include everything needed to generate tables/charts
+    query= """select 
+                    cp.crn,
+                    crash_year, 
+                    county, 
+                    fatal_count , 
+                    susp_serious_inj_count, 
+                    susp_minor_inj_count,
+                    ped_count,
+                    ped_susp_serious_inj_count,
+                    ped_death_count,
+                    bicycle_count,
+                    bicycle_susp_serious_inj_count,
+                    bicycle_death_count,
+                    collision_type,
+                    max_severity_level,
+                    hour_of_day,
+                    illumination,
+                    road_condition,
+                    heavy_truck_count, 
+                    small_truck_count,
+                    shape
+                from transportation.crash_pennsylvania cp 
+                where crn = ANY(%s);"""
 
     #read crash data from gis database
     crash_data = gpd.GeoDataFrame.from_postgis(
-        Q_crash_data, 
+        query, 
         con = GIS_ENGINE,
         geom_col = "shape",
     )
     #write to postgis
+    print("Writing crash data subset to local DB")
     crash_data.to_postgis('crash_data', con=ENGINE, if_exists="replace")
 
-    sa_crashes = gpd.GeoDataFrame.from_postgis(
-        """SELECT cd.*
-        FROM crash_data cd JOIN sa_buffer sa ON ST_Intersects(cd.shape, sa.buff) """,
-        con = ENGINE,
-        geom_col= "shape"
-    )
+def main():
+    # Configuration
+    csv_file = 'LincolnHwy-crns.csv'        # Your CSV file
+    crn_column = 'crn'                # Column name containing CRNs
+    
+    # Read CRN list from CSV
+    print(f"Reading CRN numbers from {csv_file}...")
+    crn_list = read_crn_from_csv(csv_file, crn_column)
+    print(f"Found {len(crn_list)} CRN numbers: {crn_list}")
+    
+    # Query database
+    print(f"\nQuerying GIS database...")
+    query_database(crn_list)
 
-    #export clipped crash data to shapefile
-    sa_crashes.to_file(fr"{ev.DATA_ROOT}/{sa_name}_crashes.shp")
-    print("To shapefile: Complete")
-
-    #write dataframe to postgres database
-    sa_crashes.to_postgis(fr"{sa_name}_crashes", con=ENGINE, if_exists="replace")
-    print("To postgis: Complete")
-
-    return sa_crashes
 
 if __name__ == "__main__":
-    clip_crashes()
+    main()
