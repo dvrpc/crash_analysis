@@ -21,7 +21,7 @@ q_mode_severity = fr"""
 				WHEN max_severity_level IN(1,2) THEN 'ksi'
 				WHEN max_severity_level IN (3,4,8,9) THEN 'non-ksi-inj'
 			END AS max_severity
-		FROM Clipped
+		FROM crash_data
 		GROUP BY mode, max_severity
 	) AS subquery
 	GROUP BY mode
@@ -47,7 +47,7 @@ q_mode_severity = fr"""
 				WHEN max_severity_level IN(1,2) THEN 'ksi'
 				WHEN max_severity_level IN (3,4,8,9) THEN 'non-ksi-inj'
 			END AS max_severity
-		FROM Clipped
+		FROM crash_data
 		GROUP BY mode, max_severity
 	) AS subquery;
     """
@@ -67,7 +67,7 @@ FROM (
             WHEN max_severity_level IN(1,2) THEN 'ksi'
             WHEN max_severity_level IN (3,4,8,9) THEN 'non-ksi-inj'
         END AS max_severity
-    FROM Clipped
+    FROM crash_data
     GROUP BY crash_year, max_severity_level
 ) AS subquery
 GROUP BY crash_year
@@ -90,7 +90,7 @@ FROM (
             WHEN max_severity_level IN(1,2) THEN 'ksi'
             WHEN max_severity_level IN (3,4,8,9) THEN 'non-ksi-inj'
         END AS max_severity
-    FROM Clipped
+    FROM crash_data
     GROUP BY collision_type, max_severity
 ) AS subquery
 GROUP BY collision_type
@@ -112,7 +112,7 @@ FROM (
             WHEN max_severity_level IN(1,2) THEN 'ksi'
             WHEN max_severity_level IN (3,4,8,9) THEN 'non-ksi-inj'
         END AS max_severity
-    FROM Clipped
+    FROM crash_data
     GROUP BY collision_type, max_severity
 ) AS subquery; """
 	

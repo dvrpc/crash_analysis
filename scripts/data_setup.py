@@ -14,15 +14,15 @@ import csv
 from env_vars import GIS_ENGINE, ENGINE
 from typing import List, Tuple
 
-def read_crn_from_csv(filename: str, column_name: str = 'crn') -> List[int]:
+def read_crn_from_csv(filename: str, column_name: str = 'crn') -> List[str]:
     """Read CRN numbers from CSV file."""
     crn_list = []
     with open(fr"{ev.DATA_ROOT}/{filename}", 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
             crn = row.get(column_name, '').strip()
-            if crn and crn.isdigit():
-                crn_list.append(int(crn))
+            if crn:  # Keep as string instead of converting to int
+                crn_list.append(crn)
     return crn_list
 
 def query_database(crn_list: List[int]):
@@ -39,13 +39,13 @@ def query_database(crn_list: List[int]):
                     crash_year, 
                     county, 
                     fatal_count, 
-                    susp_serious_inj_count, 
-                    susp_minor_inj_count,
+                    maj_inj_count,
+                    min_inj_count,
                     ped_count,
-                    ped_susp_serious_inj_count,
+                    ped_maj_inj_count,
                     ped_death_count,
                     bicycle_count,
-                    bicycle_susp_serious_inj_count,
+                    bicycle_maj_inj_count,
                     bicycle_death_count,
                     collision_type,
                     max_severity_level,
@@ -54,7 +54,7 @@ def query_database(crn_list: List[int]):
                     road_condition,
                     heavy_truck_count, 
                     small_truck_count,
-                    geom
+                    shape
                 FROM transportation.crash_pennsylvania cp 
                 WHERE crn = ANY(%(crn_list)s);"""
 
@@ -64,7 +64,7 @@ def query_database(crn_list: List[int]):
     crash_data = gpd.GeoDataFrame.from_postgis(
         query, 
         con=GIS_ENGINE,
-        geom_col="geom",
+        geom_col="shape",
         params={'crn_list': crn_list}
     )
     
