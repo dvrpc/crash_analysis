@@ -148,6 +148,29 @@ q_crashes_by_illumination = """SELECT
 	GROUP BY mode, illumination
 	order by mode desc, illumination"""
 
+q_crashes_by_hour = """
+SELECT 
+		hour_of_day,
+		SUM(CASE WHEN max_severity = 'ksi' THEN crash_count ELSE 0 END) AS "KSI",
+		SUM(CASE WHEN max_severity = 'non-ksi-inj' THEN crash_count ELSE 0 END) AS "Non-KSI Injury",
+		SUM(CASE WHEN max_severity = 'pdo' THEN crash_count ELSE 0 END) AS "PDO",
+		SUM(crash_count) AS "Total"
+	FROM (
+	SELECT 
+		COUNT(crn) AS crash_count,
+		hour_of_day,
+		CASE
+			WHEN max_severity_level = 'Property Damage Only' THEN 'pdo'
+			WHEN max_severity_level IN('Fatal','Suspected Serious Injury') THEN 'ksi'
+			WHEN max_severity_level IN ('Suspected Minor Injury','Possible Injury','Injury - Unknown Severity','Unknown if Injured') THEN 'non-ksi-inj'
+			END AS max_severity
+	FROM corridor_crashes
+		GROUP BY max_severity, hour_of_day  
+	) AS subquery
+	GROUP BY hour_of_day
+	order by hour_of_day
+"""
+
 
 #number of persons involved by mode and injury severity
 #from person table in main gis db; uses provided list of crns for corridor
