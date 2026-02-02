@@ -121,7 +121,7 @@ ORDER BY
 
 
 # crashes by mode, injury severity, and illuminaton
-	"""SELECT 
+q_crashes_by_illumination = """SELECT 
 		mode,
 		illumination,
 		SUM(CASE WHEN max_severity = 'ksi' THEN crash_count ELSE 0 END) AS "KSI",
@@ -151,7 +151,7 @@ ORDER BY
 
 #number of persons involved by mode and injury severity
 #from person table in main gis db; uses provided list of crns for corridor
-"""select
+q_persons_involved_by_mode = """select
 			CASE
 		WHEN cpp.person_type   IN('1', '2') THEN 'vehicle occupant'
 		WHEN cpp.person_type   = '4' THEN 'bicyclist'
